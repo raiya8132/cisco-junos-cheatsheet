@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cisco IOS と Junos のコマンド対応表（検索・コピー対応）</title>
+<meta name="description" content="Cisco IOSとJuniper Junosのコマンドを相互に検索できる無料の対応表。show系・設定系・インターフェース名を一覧し、クリックでコピーできます。">
+<style>
+:root{--bg:#f7f8fa;--card:#fff;--text:#1c2330;--sub:#5a6578;--line:#dde2ea;--accent:#1b6ef3;--cisco:#0a7a3d;--junos:#a8520a;--chip:#eef2f8}
+@media (prefers-color-scheme:dark){:root{--bg:#10151d;--card:#171e29;--text:#e6ebf3;--sub:#9aa7ba;--line:#283142;--accent:#5b9bff;--cisco:#4ccf8a;--junos:#f0a15a;--chip:#1f2836}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",Meiryo,sans-serif;line-height:1.6}
+.wrap{max-width:980px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.35rem;margin:8px 0 4px}
+.lead{color:var(--sub);font-size:.92rem;margin:0 0 16px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+#q{flex:1 1 260px;padding:11px 12px;font-size:1rem;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text)}
+#q:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tab{border:1px solid var(--line);background:var(--chip);color:var(--text);padding:6px 12px;border-radius:999px;font-size:.85rem;cursor:pointer}
+.tab[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.count{color:var(--sub);font-size:.85rem;margin:0 0 8px}
+.row{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.cols{grid-template-columns:1fr}}
+.lab{font-size:.72rem;font-weight:700;letter-spacing:.04em;margin-bottom:3px}
+.lab.c{color:var(--cisco)}.lab.j{color:var(--junos)}
+.cmd{display:block;width:100%;text-align:left;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88rem;background:var(--chip);color:var(--text);border:1px solid transparent;border-radius:6px;padding:7px 9px;cursor:pointer;word-break:break-all;white-space:pre-wrap}
+.cmd:hover{border-color:var(--accent)}
+.cmd.done{border-color:var(--cisco)}
+.note{margin:8px 0 0;color:var(--sub);font-size:.82rem}
+.cat{font-size:.72rem;color:var(--sub);margin-bottom:6px}
+.empty{color:var(--sub);padding:24px 0;text-align:center}
+.tips{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:18px 0;font-size:.9rem}
+.tips h2{font-size:1rem;margin:0 0 6px}
+.tips li{margin:3px 0}
+footer{color:var(--sub);font-size:.8rem;margin-top:24px}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--chip);padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Cisco IOS と Junos のコマンド対応表</h1>
+<p class="lead">どちらのコマンドからでも検索できます。コマンドをクリックするとコピーされます。</p>
+
+<div class="bar"><input id="q" type="search" placeholder="例: show ip route / show route / ospf / vlan" aria-label="コマンドを検索" autocomplete="off"></div>
+<div class="tabs" id="tabs" role="group" aria-label="カテゴリ"></div>
+<p class="count" id="count" aria-live="polite"></p>
+<div id="list"></div>
+
+<div class="tips">
+<h2>Junosに慣れていない人が最初につまずく点</h2>
+<ul>
+<li>設定は <code>commit</code> するまで反映されません。<code>copy run start</code> に当たる操作も <code>commit</code> です。</li>
+<li>設定前後の差分は <code>show | compare</code>、元に戻すのは <code>rollback 1</code> です。</li>
+<li>リモート作業では <code>commit confirmed 5</code> を使うと、5分以内に確認の commit がなければ自動で戻ります。</li>
+<li>Junosの <code>ping</code> は止めるまで送り続けます。<code>count 5</code> を付けるのが無難です。</li>
+<li>設定を行単位で見たいときは <code>show configuration | display set</code> が便利です。</li>
+</ul>
+</div>
+
+<footer>
+<p>注意：機種（EX／QFX／MX／SRX）とJunosのバージョンで構文が異なる場合があります。特にスイッチのVLAN設定は、ELS対応機種と旧構文の機種で書き方が違います。本番環境に投入する前に、必ず実機で確認してください。</p>
+<p>Cisco、Juniper、IOS、Junosは各社の商標です。本ページは各社と関係のない個人が作成した参考資料です。</p>
+</footer>
+</div>
+
+<script>
+const CATS=["確認 (show)","設定 (config)","運用","インターフェース名"];
+const D=[
+// 確認
+[0,"show running-config","show configuration","Junosでは commit 済みの設定がそのまま現用設定です。"],
+[0,"show running-config | include ospf","show configuration | match ospf","| match は grep に近い動きです。"],
+[0,"show running-config | section ospf","show configuration protocols ospf","階層を指定してそのブロックだけ表示できます。"],
+[0,"show running-config interface Gi0/1","show configuration interfaces ge-0/0/1",""],
+[0,"show startup-config","show configuration","Junosに running／startup の区別はありません。過去の設定は show system rollback 1 で確認します。"],
+[0,"show version","show version",""],
+[0,"show inventory","show chassis hardware",""],
+[0,"show ip interface brief","show interfaces terse","IPまで見るなら show interfaces terse の family inet の行を確認します。"],
+[0,"show interfaces","show interfaces extensive","詳細表示。簡易は show interfaces brief。"],
+[0,"show interfaces GigabitEthernet0/1","show interfaces ge-0/0/1 extensive",""],
+[0,"show interfaces status","show interfaces terse","スイッチではリンク状態の一覧として使います。"],
+[0,"show ip route","show route",""],
+[0,"show ip route 10.0.0.0","show route 10.0.0.0",""],
+[0,"show ip route summary","show route summary",""],
+[0,"show ip route ospf","show route protocol ospf",""],
+[0,"show ip route static","show route protocol static",""],
+[0,"show ip ospf neighbor","show ospf neighbor",""],
+[0,"show ip ospf interface","show ospf interface",""],
+[0,"show ip ospf database","show ospf database",""],
+[0,"show ip bgp summary","show bgp summary",""],
+[0,"show ip bgp neighbors 10.0.0.2","show bgp neighbor 10.0.0.2",""],
+[0,"show ip bgp","show route protocol bgp","BGPテーブルをIOSのように1画面で見る専用コマンドはなく、ルートテーブルから見ます。"],
+[0,"show ip arp","show arp",""],
+[0,"show mac address-table","show ethernet-switching table","ELS対応機種の例。旧機種では構文が異なることがあります。"],
+[0,"show vlan brief","show vlans",""],
+[0,"show interfaces trunk","show ethernet-switching interface","VLANの所属は show vlans でも確認できます。"],
+[0,"show spanning-tree","show spanning-tree bridge","インターフェース別は show spanning-tree interface。"],
+[0,"show cdp neighbors","show lldp neighbors","JunosはCDPではなくLLDPが標準です。"],
+[0,"show lldp neighbors","show lldp neighbors",""],
+[0,"show etherchannel summary","show lacp interfaces","束ねたインターフェースの状態は show interfaces ae0 terse でも確認できます。"],
+[0,"show standby brief","show vrrp brief","HSRP相当の機能はJunosではVRRPで実装します。"],
+[0,"show access-lists","show firewall filter <名前>","Junosのフィルタは firewall filter として設定します。"],
+[0,"show logging","show log messages","リアルタイム表示は monitor start messages。"],
+[0,"show clock","show system uptime","現在時刻と稼働時間を表示します。"],
+[0,"show users","show system users",""],
+[0,"show processes cpu","show chassis routing-engine","プロセス別は show system processes extensive。"],
+[0,"show memory statistics","show system memory",""],
+[0,"show environment","show chassis environment",""],
+[0,"show flash:","show system storage",""],
+[0,"show ntp status","show ntp associations","同期状態の詳細は show ntp status も使えます。"],
+[0,"show ip dhcp binding","show dhcp server binding","機種・バージョンによってコマンド名が異なります。"],
+[0,"show tech-support","request support information","サポートへ渡す情報の一括取得に使います。"],
+// 設定
+[1,"configure terminal","configure","configure exclusive は他の人の同時編集を禁止します。"],
+[1,"end","exit configuration-mode","設定モードを抜けます。階層の途中では exit が1階層戻る、top が最上位へ戻る動きです。"],
+[1,"write memory / copy running-config startup-config","commit","commit した時点で反映されます。同時に自動でバックアップ（rollback用）も取られます。"],
+[1,"（該当なし）","commit confirmed 5","5分以内に確認の commit をしないと自動で元に戻ります。リモート作業の保険になります。"],
+[1,"（該当なし）","show | compare","未commitの変更点の差分を表示します。"],
+[1,"（reloadで戻すなど）","rollback 1","1つ前の commit 済みの設定を呼び戻します（commitするまで反映されません）。"],
+[1,"hostname R1","set system host-name R1",""],
+[1,"ip domain-name example.local","set system domain-name example.local",""],
+[1,"interface Gi0/1\n ip address 10.0.0.1 255.255.255.0","set interfaces ge-0/0/1 unit 0 family inet address 10.0.0.1/24","Junosはマスクをプレフィックス長（/24）で書きます。"],
+[1,"description TO-CORE","set interfaces ge-0/0/1 description TO-CORE",""],
+[1,"shutdown","set interfaces ge-0/0/1 disable",""],
+[1,"no shutdown","delete interfaces ge-0/0/1 disable",""],
+[1,"ip route 0.0.0.0 0.0.0.0 10.0.0.254","set routing-options static route 0.0.0.0/0 next-hop 10.0.0.254",""],
+[1,"router ospf 1\n network 10.0.0.0 0.0.0.255 area 0","set protocols ospf area 0.0.0.0 interface ge-0/0/1.0","JunosはIPのネットワーク指定ではなく、インターフェースを指定して参加させます。"],
+[1,"passive-interface Gi0/1","set protocols ospf area 0.0.0.0 interface ge-0/0/1.0 passive",""],
+[1,"router bgp 65001\n neighbor 10.0.0.2 remote-as 65002","set routing-options autonomous-system 65001\nset protocols bgp group EXT type external\nset protocols bgp group EXT peer-as 65002\nset protocols bgp group EXT neighbor 10.0.0.2","Junosではネイバーをgroupでまとめて設定します。"],
+[1,"vlan 10\n name SALES","set vlans SALES vlan-id 10","旧構文の機種では書き方が異なります。"],
+[1,"interface Gi0/2\n switchport mode access\n switchport access vlan 10","set interfaces ge-0/0/2 unit 0 family ethernet-switching interface-mode access vlan members SALES","ELS対応機種の例。"],
+[1,"interface Gi0/3\n switchport mode trunk\n switchport trunk allowed vlan 10,20","set interfaces ge-0/0/3 unit 0 family ethernet-switching interface-mode trunk vlan members [ SALES ENG ]","VLAN名またはVLAN IDで指定できます。"],
+[1,"interface Vlan10\n ip address 10.10.0.1 255.255.255.0","set vlans SALES l3-interface irb.10\nset interfaces irb unit 10 family inet address 10.10.0.1/24","SVIに当たるものがirb（機種により vlan）です。"],
+[1,"interface Port-channel1\ninterface Gi0/4\n channel-group 1 mode active","set chassis aggregated-devices ethernet device-count 2\nset interfaces ge-0/0/4 gigether-options 802.3ad ae0\nset interfaces ae0 aggregated-ether-options lacp active","最初に device-count の指定が必要です。"],
+[1,"spanning-tree mode rapid-pvst","set protocols rstp interface all","機種によりRSTP／MSTP／VSTPなど構成が異なります。"],
+[1,"standby 1 ip 10.0.0.1\nstandby 1 priority 110","set interfaces ge-0/0/1 unit 0 family inet address 10.0.0.2/24 vrrp-group 1 virtual-address 10.0.0.1\nset interfaces ge-0/0/1 unit 0 family inet address 10.0.0.2/24 vrrp-group 1 priority 110","JunosではHSRPではなくVRRPを使います。"],
+[1,"ntp server 10.0.0.10","set system ntp server 10.0.0.10",""],
+[1,"logging host 10.0.0.10","set system syslog host 10.0.0.10 any notice",""],
+[1,"snmp-server community public RO","set snmp community public authorization read-only","本番ではpublicを使わず、推測されにくい文字列にしてください。"],
+[1,"ip ssh version 2","set system services ssh protocol-version v2",""],
+[1,"username admin privilege 15 secret ****","set system login user admin class super-user authentication plain-text-password","実行するとパスワードの入力を求められます。コマンドに平文を書かないでください。"],
+[1,"ip access-list extended ACL1\n permit tcp any host 10.0.0.1 eq 22\n deny ip any any","set firewall family inet filter ACL1 term 1 from destination-address 10.0.0.1/32\nset firewall family inet filter ACL1 term 1 from protocol tcp\nset firewall family inet filter ACL1 term 1 from destination-port 22\nset firewall family inet filter ACL1 term 1 then accept\nset firewall family inet filter ACL1 term 2 then discard","filterは適用（interface への input／output 指定）まで行わないと効きません。"],
+// 運用
+[2,"ping 10.0.0.1","ping 10.0.0.1 count 5","Junosは count を付けないと止めるまで送り続けます。"],
+[2,"traceroute 10.0.0.1","traceroute 10.0.0.1",""],
+[2,"terminal length 0","set cli screen-length 0","ページ送りを止めます。"],
+[2,"clear counters","clear interfaces statistics all",""],
+[2,"reload","request system reboot",""],
+[2,"copy running-config tftp:","file copy /config/juniper.conf.gz ...","または show configuration | save <ファイル名> で保存できます。"],
+[2,"show | begin ...","show configuration | find ...","| find は指定文字列以降を表示します。"],
+// インターフェース名
+[3,"FastEthernet0/1","fe-0/0/1","Junosは タイプ-FPC/PIC/ポート の形式です。"],
+[3,"GigabitEthernet0/1","ge-0/0/1",""],
+[3,"TenGigabitEthernet1/0/1","xe-0/0/1","機種により、ポート番号の表記が変わります。"],
+[3,"Port-channel1","ae0","LAGはaeN（aggregated Ethernet）です。"],
+[3,"Vlan10","irb.10 または vlan.10","機種によって異なります。"],
+[3,"Loopback0","lo0.0",""],
+[3,"Gi0/1.100","ge-0/0/1.100","サブインターフェースは unit 100 として設定します。"]
+];
+
+const q=document.getElementById('q'),list=document.getElementById('list'),count=document.getElementById('count'),tabs=document.getElementById('tabs');
+let cat=-1;
+function mkTab(label,val){const b=document.createElement('button');b.className='tab';b.type='button';b.textContent=label;b.setAttribute('aria-pressed',String(cat===val));b.onclick=()=>{cat=val;render();};tabs.appendChild(b);}
+function cmdBtn(text){const b=document.createElement('button');b.type='button';b.className='cmd';b.textContent=text;b.title='クリックでコピー';
+ b.onclick=async()=>{try{await navigator.clipboard.writeText(text);}catch(e){const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();try{document.execCommand('copy');}catch(_){}t.remove();}
+  b.classList.add('done');setTimeout(()=>b.classList.remove('done'),700);};return b;}
+function norm(s){return s.toLowerCase().replace(/\s+/g,' ');}
+function render(){
+ tabs.innerHTML='';mkTab('すべて',-1);CATS.forEach((c,i)=>mkTab(c,i));
+ const term=norm(q.value.trim());
+ const rows=D.filter(r=>(cat<0||r[0]===cat)&&(!term||norm(r[1]+' '+r[2]+' '+r[3]).includes(term)));
+ list.innerHTML='';
+ count.textContent=rows.length+' 件';
+ if(!rows.length){const e=document.createElement('div');e.className='empty';e.textContent='該当するコマンドがありません。別のキーワードを試してください。';list.appendChild(e);return;}
+ rows.forEach(r=>{
+  const row=document.createElement('div');row.className='row';
+  const c=document.createElement('div');c.className='cat';c.textContent=CATS[r[0]];row.appendChild(c);
+  const cols=document.createElement('div');cols.className='cols';
+  const a=document.createElement('div');const al=document.createElement('div');al.className='lab c';al.textContent='CISCO IOS';a.appendChild(al);a.appendChild(cmdBtn(r[1]));
+  const b=document.createElement('div');const bl=document.createElement('div');bl.className='lab j';bl.textContent='JUNOS';b.appendChild(bl);b.appendChild(cmdBtn(r[2]));
+  cols.appendChild(a);cols.appendChild(b);row.appendChild(cols);
+  if(r[3]){const n=document.createElement('p');n.className='note';n.textContent=r[3];row.appendChild(n);}
+  list.appendChild(row);
+ });
+}
+q.addEventListener('input',render);
+render();
+</script>
+</body>
+</html>
